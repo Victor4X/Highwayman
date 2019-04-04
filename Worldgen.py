@@ -81,71 +81,34 @@ class World_map:
                         self.cities.append(City(pos))
         
         # Road generation
-        road_map = []
-        for c1 in self.cities:
-            closest = None
-            for c2 in self.cities:
-                if c1 is not c2:
-                    if closest is None:
-                        closest = c2
-                    elif dist(c1.pos, c2.pos) < dist(c1.pos, closest.pos):
-                        closest = c2
-            road_map.append([(c1.pos, closest.pos)])
+        connected_cities = []
+        city_distances = []
+        self.generato_roado(self.cities[0],connected_cities,city_distances)
+
+    def generato_roado(self,current,connected,distances):
+        if len(distances) == 0 and len(connected) > 0:
+            return True
+        connected.append(current)
+        shortest = None
+        for c2 in self.cities:
+            if (current is not c2) and (c2 not in connected):
+                distances.append([current,c2,dist(current.pos, c2.pos)])
+        for distance in distances:
+            if distance[1] not in connected:
+                if shortest is None:
+                    shortest = distance
+                elif distance[2] < shortest[2]:
+                    shortest = distance
+            else:
+                distances.remove(distance)
         
+        if shortest is None:
+            return True
 
-        while len(road_map) > 1:
-            for bunch in road_map:
-                for road in bunch:
-                    for other_bunch in road_map:    
-                        if bunch is not other_bunch:
-                            for other_road in other_bunch[::-1]:
-                                if road[0] in other_road or road[1] in other_road:
-                                    bunch.append(other_road)
-                                    other_bunch.pop(other_bunch.index(other_road))
-            
-            j = 0
-            for i in range(len(road_map)):
-                if len(road_map[i - j]) == 0:
-                    road_map.pop(i - j)
-                    j += 1
-
-            to_pop = []
-            for bunch in road_map:
-                for road in bunch:
-                    for other_road in bunch:
-                        if road is not other_road and bunch.index(road) < bunch.index(other_road):
-                            if road[0] in other_road and road[1] in other_road:
-                                to_pop.append((road_map.index(bunch), bunch.index(road)))
-
-            
-            for i in to_pop[::-1]:
-                road_map[i[0]].pop(i[1])           
-            
-            print(road_map)
-            print("before")
-
-            if len(road_map) > 1:
-                for bunch in road_map:
-                    closest_pair = None
-                    for road in bunch:
-                        for other_bunch in road_map:
-                            if bunch is not other_bunch:
-                                for other_road in other_bunch:
-
-                                    for p1 in road:
-                                        for p2 in other_road:
-                                            
-                                            if closest_pair is None:
-                                                closest_pair = (p1, p2)
-                                            elif dist(p1, p2) < dist(closest_pair[0], closest_pair[1]):
-                                                closest_pair = (p1, p2)
-                    bunch.append(closest_pair)
-            
-            print(road_map)
-            print(len(road_map))
-            print('\n')
-        for road in road_map[0]:
-            self.roads.append(Road(road[0], road[1]))
+        self.roads.append(Road(shortest[0].pos, shortest[1].pos))
+        
+        if self.generato_roado(shortest[1],connected,distances):
+            return True
         
         
         
